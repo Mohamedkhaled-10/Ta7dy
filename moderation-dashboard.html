@@ -151,19 +151,22 @@
       await signOut(auth);
     });
 
-    onAuthStateChanged(auth, async (user) => {
-      if(user){
-        // check moderator flag in DB users/{uid}/isModerator
-        const uref = ref(db, `users/${user.uid}`);
-        const snap = await get(uref);
-        const u = snap.val() || {};
-        const isMod = u.isModerator === true || u.role === 'moderator';
-        if(!isMod){
-          modInfo.style.display = 'none';
-          alert('حسابك ليس مشرف. امنح المستخدم قيمة isModerator=true في مسار users/{uid} عبر الـFirebase console');
-          await signOut(auth);
-          return;
-        }
+onAuthStateChanged(auth, async (user) => {
+  console.log('onAuthStateChanged user =', user);
+  if (!user) {
+    console.log('لا يوجد مستخدم مسجل دخول');
+    return;
+  }
+  console.log('الـUID الحالي للمستخدم:', user.uid);
+
+  // افحص مباشرة بيانات الـuser في الـDB
+  try {
+    const uref = ref(db, `users/${user.uid}`);
+    const snap = await get(uref);
+    console.log('Snapshot users/', user.uid, snap.val());
+  } catch (err) {
+    console.error('خطأ عند قراءة users/{uid} من DB:', err);
+  }
         modInfo.style.display = 'block';
         modEmail.textContent = user.email || user.uid;
         modStatus.textContent = 'متصل';
