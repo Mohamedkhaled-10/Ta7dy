@@ -69,7 +69,7 @@
         <button id="btnLogin" class="btn">دخول</button>
         <button id="btnUseGuest" class="btn ghost">إلغاء</button>
       </div>
-      <div style="margin-top:12px;color:var(--muted);font-size:13px">تأكد أن حساب المشرف موجود ومفعل في Authentication، وأن users/{uid}.isModerator = true في Realtime DB.</div>
+      <div style="margin-top:12px;color:var(--muted);font-size:13px">تأكد أن حساب المشرف موجود ومفعل في Authentication.</div>
     </div>
   </div>
 
@@ -178,7 +178,7 @@
 
     btnLogout.addEventListener('click', async ()=>{ await signOut(auth); });
 
-    // Auth state listener — validate moderator flag before revealing dashboard
+    // Auth state listener — show dashboard for any authenticated user (no moderator check)
     onAuthStateChanged(auth, async (user) => {
       if(!user){
         // show login screen
@@ -192,30 +192,12 @@
         return;
       }
 
-      // check DB for moderator flag
-      try{
-        const uref = ref(db, `users/${user.uid}`);
-        const snap = await get(uref);
-        const u = snap.val() || {};
-        console.log('Moderator check for', user.uid, u);
-        if(u.isModerator !== true){
-          alert('حسابك ليس مشرف. امنح المستخدم قيمة isModerator=true في مسار users/{uid} عبر الـFirebase console');
-          await signOut(auth);
-          return;
-        }
-      }catch(err){
-        console.error('Error fetching user data', err);
-        alert('خطأ في التحقق من صلاحية المشرف. تأكد من قواعد الـDB.');
-        await signOut(auth);
-        return;
-      }
-
-      // user is moderator -> show dashboard
+      // No isModerator check: any signed-in user can see the dashboard
       loginScreen.classList.add('hidden');
       dashboard.classList.remove('hidden');
       mainHeader.classList.remove('hidden');
       modEmail.textContent = user.email || user.uid;
-      log('تم تسجيل الدخول كمشرف: ' + (user.email||user.uid));
+      log('تم تسجيل الدخول: ' + (user.email||user.uid));
       startReportsListener();
     });
 
@@ -298,7 +280,7 @@
     function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>\"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
 
     console.log('Moderation dashboard loaded');
-    log('لوحة المشرفين جاهزة — سجّل الدخول بحساب مشرف (users/{uid}.isModerator = true)');
+    log('لوحة المشرفين جاهزة — سجّل الدخول بحساب Authentication (بدون تحقق من isModerator)');
   </script>
 </body>
 </html>
