@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "queues": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".read": true,
+        ".validate": "newData.hasChildren(['ts','name'])"
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".read": true,
+        ".write": "auth != null",
+        "players": {
+          "$playerId": {
+            ".write": "auth.uid === $playerId", 
+            ".validate": "newData.hasChildren(['displayName','role','connected'])"
+          }
+        },
+        "challenge": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['text','fromUid','createdAt'])"
+        },
+        "messages": {
+          "$msg": {
+            ".write": "auth != null && newData.hasChildren(['from','text','ts'])",
+            ".validate": "newData.child('from').val() === auth.uid"
+          }
+        }
+      }
+    },
+    "presence": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".read": true
+      }
+    },
+    "reports": {
+      ".write": "auth != null",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isModerator').val() === true"
+    },
+    ".read": true,
+    ".write": "auth != null"
+  }
+}

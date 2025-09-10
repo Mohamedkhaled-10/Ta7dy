@@ -1,0 +1,234 @@
+/* css/style.css — MODERN HIGH-CONTRAST THEME */
+:root{
+  --bg: #ffffff;                   /* خلفية الصفحة */
+  --panel-bg: #ffffff;             /* خلفية البطاقات */
+  --muted: #6b7280;                /* نص ثانوي */
+  --text: #0b1220;                 /* نص رئيسي داكن لقراءة عالية */
+  --accent: #6b21a8;               /* بنفسجي عميق كأكسنت */
+  --accent-2: #0ea5a4;             /* ثانوي — تدرج/أيقونات */
+  --danger: #ef4444;
+  --success: #059669;
+  --glass: rgba(255,255,255,0.9);
+  --card-shadow: 0 10px 30px rgba(7,12,20,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --gap: 18px;
+  font-family: "Tajawal", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial;
+  color-scheme: light;
+}
+
+/* Reset & base */
+*{box-sizing:border-box}
+html,body,#app{height:100%}
+body{
+  margin:0;
+  background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-size:16px;
+  line-height:1.45;
+}
+
+/* Topbar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 20px;
+  gap:12px;
+  backdrop-filter: blur(6px);
+}
+.logo{
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:0.6px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo::before{
+  content: '';
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 6px 20px rgba(107,33,168,0.14);
+  display:inline-block;
+}
+
+/* Status area */
+.status{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--muted);
+}
+
+/* Grid layout */
+.main-grid{
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:var(--gap);
+  padding:22px;
+  height: calc(100% - 120px);
+}
+
+/* Panels */
+.panel{
+  background:var(--panel-bg);
+  border-radius: var(--radius-lg);
+  padding:18px;
+  box-shadow: var(--card-shadow);
+  display:flex;
+  flex-direction:column;
+  min-height:0; /* for flex containers */
+}
+
+/* Challenge panel */
+.challenge-panel{ padding:20px; display:flex; flex-direction:column; gap:14px; }
+.panel-head h2{ margin:0 0 6px 0; font-size:18px; color:var(--text) }
+.panel-head h3{ margin:0 0 6px 0; font-size:15px; color:var(--muted) }
+
+.center{ display:flex; flex-direction:column; gap:14px; align-items:center; justify-content:center; height:100%}
+.hidden{ display:none; }
+
+/* Role & header */
+.roleLine{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+.roleBadge{
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:13px;
+  background: linear-gradient(90deg, rgba(107,33,168,0.12), rgba(14,165,164,0.06));
+  color:var(--accent);
+  border:1px solid rgba(107,33,168,0.06);
+}
+
+/* Challenge card */
+.challengeCard{
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,253,0.98));
+  border-radius:14px;
+  padding:18px;
+  min-height:180px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  border: 1px solid rgba(11,18,32,0.03);
+}
+
+.challengeMeta{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted) }
+.challengeText{ font-size:20px; font-weight:600; color:var(--text); line-height:1.35; }
+
+/* Actions layout */
+.actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; align-items:center; }
+
+/* Buttons modern */
+.btn{
+  border: none;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  background: transparent;
+  box-shadow:none;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  font-weight:700;
+  letter-spacing:0.2px;
+}
+.btn:focus{ outline: 3px solid rgba(107,33,168,0.12); outline-offset:3px; }
+
+.btn.primary{
+  background: linear-gradient(90deg, var(--accent), #8b5cf6);
+  color: #fff;
+  box-shadow: 0 8px 30px rgba(107,33,168,0.12);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.btn.primary:hover{ transform: translateY(-4px); box-shadow: 0 14px 40px rgba(107,33,168,0.16); }
+
+.btn.secondary{
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(107,33,168,0.12);
+}
+.btn.secondary:hover{ transform: translateY(-2px); }
+
+.btn.danger{
+  background: rgba(239,68,68,0.08);
+  color: var(--danger);
+  border: 1px solid rgba(239,68,68,0.08);
+}
+.btn.success{
+  background: linear-gradient(90deg, rgba(5,150,105,0.12), rgba(16,185,129,0.06));
+  color: var(--success);
+  border: 1px solid rgba(5,150,105,0.06);
+}
+
+.btn.large{ padding:14px 20px; font-size:16px }
+
+/* Chat panel */
+.chat-panel{ display:flex; flex-direction:column; gap:12px; }
+.chat-body{ flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:12px; background: linear-gradient(180deg, rgba(250,251,255,0.8), rgba(255,255,255,0.9)); border-radius:12px; border:1px solid rgba(11,18,32,0.03); }
+
+.events{ font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:8px; }
+.events div{ padding:8px 10px; background: rgba(11,18,32,0.02); border-radius:10px; font-size:13px; color:var(--muted); }
+
+/* Messages */
+.messages{ display:flex; flex-direction:column; gap:10px; padding-top:4px; }
+.message{
+  padding:10px 14px;
+  border-radius:14px;
+  max-width:78%;
+  font-size:14px;
+  box-shadow: 0 6px 20px rgba(8,15,30,0.04);
+}
+.message.me{
+  align-self:flex-start;
+  background: linear-gradient(180deg, #f8fafc, #f3f4f6);
+  color: var(--text);
+  border: 1px solid rgba(11,18,32,0.03);
+}
+.message.other{
+  align-self:flex-end;
+  background: linear-gradient(90deg, rgba(107,33,168,0.12), rgba(14,165,164,0.06));
+  color: #fff;
+  font-weight:600;
+  border: 1px solid rgba(107,33,168,0.06);
+}
+
+/* input area */
+.panel-foot{ display:flex; gap:8px; padding-top:10px; align-items:center; }
+.panel-foot input{
+  flex:1;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid rgba(11,18,32,0.06);
+  font-size:15px;
+  background: #fff;
+}
+.panel-foot input:focus{ outline: 3px solid rgba(107,33,168,0.08); outline-offset:2px; }
+
+/* footer */
+.footer{ text-align:center; padding:10px 0; color:var(--muted); font-size:13px }
+
+/* small screens */
+@media (max-width:980px){
+  .main-grid{ grid-template-columns: 1fr; height: auto; padding:18px; }
+  .chat-panel{ order:2; margin-top:8px }
+  .challengeText{ font-size:18px; }
+}
+
+/* very small */
+@media (max-width:420px){
+  :root{ font-size:15px; }
+  .logo{ font-size:18px; }
+  .main-grid{ padding:12px; gap:12px; }
+  .challengeCard{ padding:14px; }
+}
+
+/* Accessibility helpers (contrast tweaks) */
+@media (prefers-contrast: more){
+  :root{
+    --card-shadow: 0 10px 22px rgba(7,12,20,0.12);
+  }
+  .challengeText{ text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
+}

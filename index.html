@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>تحديات — لقاء عشوائي +16</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <meta name="description" content="موقع تحديات ومراسلة عشوائي +16 — واجهة عصرية ومتجاوبة" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="logo">تحديلي</div>
+      <div class="status">
+        <span id="statusText">غير متصل</span>
+        <button id="btn-leave" class="btn small hide">خروج</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <!-- لوحة التحدي -->
+      <section class="panel challenge-panel">
+        <div class="panel-head">
+          <h2>التحدي الحالي</h2>
+        </div>
+
+        <div class="panel-body" id="challengeArea">
+          <div id="noRoom" class="center">
+            <p>استعد — هنلاقي لك شريك الآن.</p>
+            <button id="btn-find" class="btn primary large">ابدأ البحث عن شريك</button>
+          </div>
+
+          <div id="inRoom" class="hidden">
+            <div class="roleLine">
+              <div>دورك: <span id="myRole">--</span></div>
+              <div id="opponentName">اسم الخصم</div>
+            </div>
+
+            <div class="challengeCard" id="challengeCard">
+              <div class="challengeMeta">
+                <small id="challengeFrom">—</small>
+                <small id="challengeTs">—</small>
+              </div>
+              <div id="challengeText" class="challengeText">لم يتم اختيار تحدي بعد.</div>
+
+              <div id="challengeActions" class="actions">
+                <!-- أزرار تظهر حسب الدور -->
+                <button id="btn-accept" class="btn primary">اقبل التحدي</button>
+                <button id="btn-write" class="btn">اكتب تحدي</button>
+                <button id="btn-refuse" class="btn danger">رفض</button>
+                <button id="btn-complete" class="btn success hide">تم</button>
+              </div>
+            </div>
+
+            <div class="rulesNote">
+              <small>لا تنشر تحديات خطرة أو مخالفة. البلاغ سيؤدي لفحص من قبل المشرفين.</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- لوحة الشات والأنشطة -->
+      <aside class="panel chat-panel">
+        <div class="panel-head">
+          <h3>الشات & سجل الأحداث</h3>
+        </div>
+
+        <div class="panel-body chat-body">
+          <div id="events" class="events"></div>
+          <div id="messages" class="messages"></div>
+        </div>
+
+        <div class="panel-foot">
+          <input id="messageInput" placeholder="اكتب رسالة..." />
+          <button id="sendMsgBtn" class="btn">إرسال</button>
+          <button id="reportBtn" class="btn danger">تبليغ</button>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <small>© 2025 — شروط الاستخدام والخصوصية</small>
+    </footer>
+  </div>
+
+  <!-- Firebase init -->
+  <script type="module" src="js/firebase-init.js"></script>
+  <!-- App logic -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
