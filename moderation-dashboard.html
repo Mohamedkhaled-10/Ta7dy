@@ -6,14 +6,29 @@
   <title>لوحة المشرفين — Moderation Dashboard</title>
   <meta name="description" content="لوحة لمراجعة البلاغات والرسائل وإدارة المستخدمين" />
   <style>
-    /* بسيط CSS للوحة المشرفين */
     :root{ --bg:#07080b; --panel:#0f1720; --muted:#9aa3b2; --text:#e6eef8; --accent:#7c3aed; }
     *{box-sizing:border-box}
+    html,body{height:100%;}
     body{margin:0;font-family:Tahoma, Arial, "Segoe UI", sans-serif;background:linear-gradient(180deg,#04060a,#0a0b10);color:var(--text);}
-    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.03)}
+
+    /* Fullscreen login modal (first screen) */
+    .login-screen{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(2,6,23,0.6));z-index:60;
+    }
+    .login-card{width:420px;max-width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(2,6,23,0.6);}
+    .login-card h2{margin:0 0 12px 0;color:var(--text)}
+    .login-card p{margin:0 0 18px 0;color:var(--muted)}
+    .form-row{display:flex;flex-direction:column;gap:10px}
+    .form-row input{padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)}
+    .login-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .btn{background:linear-gradient(90deg,var(--accent),#9f7aea);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
+
+    /* Main dashboard (hidden until login) */
+    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.03);background:transparent}
     header h1{font-size:18px;margin:0}
-    .container{display:grid;grid-template-columns:380px 1fr;gap:18px;padding:18px}
-    .panel{background:var(--panel);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.02);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    .container{display:grid;grid-template-columns:380px 1fr;gap:18px;padding:18px;height:calc(100% - 80px);}
+    .panel{background:var(--panel);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.02);box-shadow:0 10px 30px rgba(2,6,23,0.6);overflow:auto}
     .panel h3{margin:0 0 8px 0;color:var(--muted);font-size:14px}
     .report-list{max-height:72vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
     .report-item{padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.008));cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
@@ -25,9 +40,6 @@
     .messages{display:flex;flex-direction:column;gap:8px}
     .msg{padding:10px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
     .actions{display:flex;gap:8px;margin-top:12px}
-    button{background:linear-gradient(90deg,var(--accent),#9f7aea);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
-    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
-    .danger{background:linear-gradient(90deg,#ff5c6c,#ff7b8a)}
     .small{padding:6px 8px;font-size:13px}
     .top-actions{display:flex;gap:8px;align-items:center}
     .login-box{display:flex;gap:8px}
@@ -35,29 +47,45 @@
     .badge{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
     .status-ok{color:#34d399}
     .status-bad{color:#ff7b8a}
-    .log{font-size:13px;color:var(--muted);margin-top:12px}
-    /* responsive */
+    .log{font-size:13px;color:var(--muted);margin-top:12px;white-space:pre-wrap}
+
+    /* hidden helper */
+    .hidden{display:none}
+
     @media (max-width:980px){.container{grid-template-columns:1fr;padding:12px}.report-list{max-height:40vh}.detail{max-height:40vh}}
   </style>
 </head>
 <body>
-  <header>
+  <!-- Login screen shown first -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card" role="dialog" aria-labelledby="loginTitle">
+      <h2 id="loginTitle">تسجيل دخول المشرف</h2>
+      <p>ادخل بريد المشرف وكلمة المرور للدخول إلى لوحة المشرفين.</p>
+      <div class="form-row">
+        <input id="email" type="text" placeholder="email moderator" autocomplete="username" />
+        <input id="password" type="password" placeholder="password" autocomplete="current-password" />
+      </div>
+      <div class="login-actions">
+        <button id="btnLogin" class="btn">دخول</button>
+        <button id="btnUseGuest" class="btn ghost">إلغاء</button>
+      </div>
+      <div style="margin-top:12px;color:var(--muted);font-size:13px">تأكد أن حساب المشرف موجود ومفعل في Authentication، وأن users/{uid}.isModerator = true في Realtime DB.</div>
+    </div>
+  </div>
+
+  <!-- Main header + dashboard (hidden until login validated) -->
+  <header id="mainHeader" class="hidden">
     <h1>لوحة المشرفين — مراجعة البلاغات والرسائل</h1>
     <div class="top-actions">
-      <div class="login-box" id="authBox">
-        <input id="email" type="text" placeholder="email moderator" />
-        <input id="password" type="password" placeholder="password" />
-        <button id="btnLogin" class="small">دخول</button>
-        <button id="btnLogout" class="small ghost" style="display:none">خروج</button>
-      </div>
-      <div id="moderatorInfo" style="display:none">
+      <div class="login-box" id="authBoxHidden">
         <span class="badge">المشرف: <strong id="modEmail"></strong></span>
-        <span id="modStatus" class="badge"></span>
+        <span id="modStatus" class="badge status-ok">متصل</span>
+        <button id="btnLogout" class="small btn ghost">خروج</button>
       </div>
     </div>
   </header>
 
-  <div class="container">
+  <div id="dashboard" class="container hidden">
     <!-- عمود البلاغات -->
     <aside class="panel">
       <h3>قائمة البلاغات</h3>
@@ -83,11 +111,11 @@
         <div id="roomMessages" class="messages"></div>
 
         <div class="actions">
-          <button id="btnResolve" class="small ghost">وضع حاله: تم</button>
-          <button id="btnBan" class="small danger">حظر المستخدم المبلغ عليه</button>
-          <button id="btnDeleteMsg" class="small ghost">حذف رسالة مختارة</button>
-          <button id="btnBlockRoom" class="small danger">حظر/إغلاق الغرفة</button>
-          <button id="btnExport" class="small ghost">تصدير CSV</button>
+          <button id="btnResolve" class="small btn ghost">وضع حاله: تم</button>
+          <button id="btnBan" class="small btn danger">حظر المستخدم المبلغ عليه</button>
+          <button id="btnDeleteMsg" class="small btn ghost">حذف رسالة مختارة</button>
+          <button id="btnBlockRoom" class="small btn danger">حظر/إغلاق الغرفة</button>
+          <button id="btnExport" class="small btn ghost">تصدير CSV</button>
         </div>
 
         <div class="log" id="modLog"></div>
@@ -96,22 +124,24 @@
   </div>
 
   <script type="module">
-    // moderation-dashboard.html (module)
     import { auth as exportedAuth } from './js/firebase-init.js';
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
-    import { getDatabase, ref, onChildAdded, onValue, get, update, remove, push, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+    import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+    import { getDatabase, ref, onChildAdded, onValue, get, update, remove } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
     const db = getDatabase();
-    const auth = exportedAuth; // from firebase-init
+    const auth = exportedAuth;
 
-    // UI
+    // UI refs
+    const loginScreen = document.getElementById('loginScreen');
+    const dashboard = document.getElementById('dashboard');
+    const mainHeader = document.getElementById('mainHeader');
     const emailInput = document.getElementById('email');
     const passInput = document.getElementById('password');
     const btnLogin = document.getElementById('btnLogin');
+    const btnUseGuest = document.getElementById('btnUseGuest');
     const btnLogout = document.getElementById('btnLogout');
-    const modInfo = document.getElementById('moderatorInfo');
     const modEmail = document.getElementById('modEmail');
-    const modStatus = document.getElementById('modStatus');
+    const modLog = document.getElementById('modLog');
 
     const reportListEl = document.getElementById('reportList');
     const searchInput = document.getElementById('searchInput');
@@ -125,71 +155,71 @@
     const btnDeleteMsg = document.getElementById('btnDeleteMsg');
     const btnBlockRoom = document.getElementById('btnBlockRoom');
     const btnExport = document.getElementById('btnExport');
-    const modLog = document.getElementById('modLog');
 
-    let reportsCache = {}; // cache reports
+    let reportsCache = {};
     let selectedReportId = null;
     let selectedMessageKey = null;
 
-    // Helpers
     const now = () => new Date().toLocaleString();
     function log(msg){ modLog.textContent = `[${now()}] ${msg}\n` + modLog.textContent; }
 
-    // Authentication (moderator) - using email/password recommended
+    // Login action
     btnLogin.addEventListener('click', async () => {
       const email = emailInput.value.trim();
       const password = passInput.value.trim();
       if(!email || !password) return alert('ادخل ايميل وكلمة المرور');
       try{
         await signInWithEmailAndPassword(auth, email, password);
-      }catch(e){
-        console.error(e); alert('فشل تسجيل الدخول: ' + e.message);
-      }
+      }catch(e){ console.error(e); alert('فشل تسجيل الدخول: ' + e.message); }
     });
 
-    btnLogout.addEventListener('click', async () => {
-      await signOut(auth);
-    });
+    // optional cancel (keep on login screen but do nothing)
+    btnUseGuest.addEventListener('click', ()=>{ alert('تم الإلغاء'); });
 
-onAuthStateChanged(auth, async (user) => {
-  console.log('onAuthStateChanged user =', user);
-  if (!user) {
-    console.log('لا يوجد مستخدم مسجل دخول');
-    return;
-  }
-  console.log('الـUID الحالي للمستخدم:', user.uid);
+    btnLogout.addEventListener('click', async ()=>{ await signOut(auth); });
 
-  // افحص مباشرة بيانات الـuser في الـDB
-  try {
-    const uref = ref(db, `users/${user.uid}`);
-    const snap = await get(uref);
-    console.log('Snapshot users/', user.uid, snap.val());
-  } catch (err) {
-    console.error('خطأ عند قراءة users/{uid} من DB:', err);
-  }
-        modInfo.style.display = 'block';
-        modEmail.textContent = user.email || user.uid;
-        modStatus.textContent = 'متصل';
-        modStatus.className = 'badge status-ok';
-        btnLogout.style.display = 'inline-block';
-        document.getElementById('authBox').style.display = 'none';
-        log('تم تسجيل الدخول كمشرف');
-        // start listening to reports
-        startReportsListener();
-      }else{
-        modInfo.style.display = 'none';
-        btnLogout.style.display = 'none';
-        document.getElementById('authBox').style.display = 'flex';
-        modStatus.textContent = '';
-        log('تسجيل الخروج');
-        // clear data
+    // Auth state listener — validate moderator flag before revealing dashboard
+    onAuthStateChanged(auth, async (user) => {
+      if(!user){
+        // show login screen
+        loginScreen.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+        mainHeader.classList.add('hidden');
         reportListEl.innerHTML = '';
         reportMeta.textContent = 'اختر بلاغًا من القائمة لمشاهدة التفاصيل';
         roomMessagesEl.innerHTML = '';
+        log('تم تسجيل الخروج');
+        return;
       }
+
+      // check DB for moderator flag
+      try{
+        const uref = ref(db, `users/${user.uid}`);
+        const snap = await get(uref);
+        const u = snap.val() || {};
+        console.log('Moderator check for', user.uid, u);
+        if(u.isModerator !== true){
+          alert('حسابك ليس مشرف. امنح المستخدم قيمة isModerator=true في مسار users/{uid} عبر الـFirebase console');
+          await signOut(auth);
+          return;
+        }
+      }catch(err){
+        console.error('Error fetching user data', err);
+        alert('خطأ في التحقق من صلاحية المشرف. تأكد من قواعد الـDB.');
+        await signOut(auth);
+        return;
+      }
+
+      // user is moderator -> show dashboard
+      loginScreen.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+      mainHeader.classList.remove('hidden');
+      modEmail.textContent = user.email || user.uid;
+      log('تم تسجيل الدخول كمشرف: ' + (user.email||user.uid));
+      startReportsListener();
     });
 
-    // Load reports and listen for updates
+    // Reports listener (same as before)
     function startReportsListener(){
       const reportsRef = ref(db, 'reports');
       onChildAdded(reportsRef, (snap) => {
@@ -198,11 +228,8 @@ onAuthStateChanged(auth, async (user) => {
         renderReportItem(id,data);
       });
       onValue(reportsRef, (snap)=>{
-        // handle status changes
         const all = snap.val() || {};
-        for(const id of Object.keys(all)){
-          reportsCache[id] = all[id];
-        }
+        for(const id of Object.keys(all)) reportsCache[id] = all[id];
         rerenderList();
       });
     }
@@ -214,7 +241,6 @@ onAuthStateChanged(auth, async (user) => {
       const s = data.status || 'open';
       el.innerHTML = `<div><strong>بلاغ</strong> — الغرفة: ${data.roomId || '-'} — بلّغ: ${data.reporter || '-'} — على: ${data.targetUser || data.reported || '-'} </div><div style=\"font-size:12px;color:var(--muted);margin-top:6px\">${data.reason || ''} — ${s}</div>`;
       el.addEventListener('click', ()=> selectReport(id));
-      // prepend newest on top
       reportListEl.prepend(el);
     }
 
@@ -225,10 +251,7 @@ onAuthStateChanged(auth, async (user) => {
       const items = Object.entries(reportsCache).sort((a,b)=> (b[1].ts||0) - (a[1].ts||0));
       for(const [id,data] of items){
         if(status !== 'all' && (data.status||'open') !== status) continue;
-        if(q){
-          const hay = JSON.stringify(data).toLowerCase();
-          if(!hay.includes(q)) continue;
-        }
+        if(q){ const hay = JSON.stringify(data).toLowerCase(); if(!hay.includes(q)) continue; }
         renderReportItem(id,data);
       }
     }
@@ -237,17 +260,11 @@ onAuthStateChanged(auth, async (user) => {
     statusFilter.addEventListener('change', rerenderList);
 
     async function selectReport(id){
-      selectedReportId = id;
-      selectedMessageKey = null;
+      selectedReportId = id; selectedMessageKey = null;
       const data = reportsCache[id];
       reportMeta.textContent = `بلاغ: ${id} — الحالة: ${data.status||'open'} — المبلغ: ${data.reporter || '-'} — المستهدف: ${data.targetUser || data.reported || '-'} — الغرفة: ${data.roomId || '-'} `;
       reportBody.innerHTML = `<pre style=\"white-space:pre-wrap;color:var(--text);\">${data.reason||'لا يوجد شرح'}</pre>`;
-      // load room messages if exist
-      if(data.roomId){
-        await loadRoomMessages(data.roomId);
-      }else{
-        roomMessagesEl.innerHTML = '<div class="msg">لا توجد غرفة مرتبطة بالبلاغ</div>';
-      }
+      if(data.roomId) await loadRoomMessages(data.roomId); else roomMessagesEl.innerHTML = '<div class="msg">لا توجد غرفة مرتبطة بالبلاغ</div>';
     }
 
     async function loadRoomMessages(roomId){
@@ -262,78 +279,24 @@ onAuthStateChanged(auth, async (user) => {
         div.className = 'msg';
         div.dataset.key = k;
         div.innerHTML = `<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px\"><div><strong>${m.from||'غير معروف'}</strong> <small style=\"color:var(--muted);font-size:12px\">${new Date(m.ts||Date.now()).toLocaleString()}</small></div><div><button class=\"ghost small\" data-key=\"${k}\">⬇</button></div></div><div style=\"margin-top:8px;color:var(--text)\">${escapeHtml(m.text||'')}</div>`;
-        // click selects message
-        div.addEventListener('click', ()=>{
-          selectedMessageKey = k;
-          // highlight
-          document.querySelectorAll('.msg').forEach(n=> n.style.borderColor='rgba(255,255,255,0.02)');
-          div.style.borderColor = 'rgba(124,58,237,0.16)';
-        });
+        div.addEventListener('click', ()=>{ selectedMessageKey = k; document.querySelectorAll('.msg').forEach(n=> n.style.borderColor='rgba(255,255,255,0.02)'); div.style.borderColor = 'rgba(124,58,237,0.16)'; });
         roomMessagesEl.appendChild(div);
       }
       log('تم تحميل رسائل الغرفة ' + roomId);
     }
 
-    // Actions
-    btnResolve.addEventListener('click', async ()=>{
-      if(!selectedReportId) return alert('اختر بلاغاً أولاً');
-      await update(ref(db, `reports/${selectedReportId}`), { status: 'resolved', resolvedAt: Date.now(), resolvedBy: auth.currentUser.uid });
-      log('تم وضع حالة البلاغ كـ resolved: ' + selectedReportId);
-      alert('تم وضع الحالة: تم');
-    });
+    btnResolve.addEventListener('click', async ()=>{ if(!selectedReportId) return alert('اختر بلاغاً أولاً'); await update(ref(db, `reports/${selectedReportId}`), { status: 'resolved', resolvedAt: Date.now(), resolvedBy: auth.currentUser.uid }); log('تم وضع حالة البلاغ كـ resolved: ' + selectedReportId); alert('تم وضع الحالة: تم'); });
 
-    btnBan.addEventListener('click', async ()=>{
-      if(!selectedReportId) return alert('اختر بلاغاً');
-      const data = reportsCache[selectedReportId];
-      const target = data.targetUser || data.reported;
-      if(!target) return alert('لا يوجد مستخدم مستهدف في البلاغ');
-      await update(ref(db, `users/${target}`), { banned: true, bannedAt: Date.now(), bannedBy: auth.currentUser.uid });
-      log('تم حظر المستخدم: ' + target);
-      alert('تم حظر المستخدم');
-    });
+    btnBan.addEventListener('click', async ()=>{ if(!selectedReportId) return alert('اختر بلاغاً'); const data = reportsCache[selectedReportId]; const target = data.targetUser || data.reported; if(!target) return alert('لا يوجد مستخدم مستهدف في البلاغ'); await update(ref(db, `users/${target}`), { banned: true, bannedAt: Date.now(), bannedBy: auth.currentUser.uid }); log('تم حظر المستخدم: ' + target); alert('تم حظر المستخدم'); });
 
-    btnDeleteMsg.addEventListener('click', async ()=>{
-      if(!selectedReportId) return alert('اختر بلاغاً');
-      if(!selectedMessageKey) return alert('اختر رسالة من قائمة المحادثة (اضغط عليها)');
-      const data = reportsCache[selectedReportId];
-      const rid = data.roomId;
-      if(!rid) return alert('لا توجد غرفة مرتبطة');
-      await remove(ref(db, `rooms/${rid}/messages/${selectedMessageKey}`));
-      log('تم حذف رسالة ' + selectedMessageKey + ' من الغرفة ' + rid);
-      await loadRoomMessages(rid);
-    });
+    btnDeleteMsg.addEventListener('click', async ()=>{ if(!selectedReportId) return alert('اختر بلاغاً'); if(!selectedMessageKey) return alert('اختر رسالة من قائمة المحادثة (اضغط عليها)'); const data = reportsCache[selectedReportId]; const rid = data.roomId; if(!rid) return alert('لا توجد غرفة مرتبطة'); await remove(ref(db, `rooms/${rid}/messages/${selectedMessageKey}`)); log('تم حذف رسالة ' + selectedMessageKey + ' من الغرفة ' + rid); await loadRoomMessages(rid); });
 
-    btnBlockRoom.addEventListener('click', async ()=>{
-      if(!selectedReportId) return alert('اختر بلاغا');
-      const data = reportsCache[selectedReportId];
-      const rid = data.roomId;
-      if(!rid) return alert('لا توجد غرفة مرتبطة');
-      await update(ref(db, `rooms/${rid}`), { state: 'blocked', blockedAt: Date.now(), blockedBy: auth.currentUser.uid });
-      log('تم إغلاق الغرفة: ' + rid);
-      alert('تم إغلاق الغرفة');
-    });
+    btnBlockRoom.addEventListener('click', async ()=>{ if(!selectedReportId) return alert('اختر بلاغا'); const data = reportsCache[selectedReportId]; const rid = data.roomId; if(!rid) return alert('لا توجد غرفة مرتبطة'); await update(ref(db, `rooms/${rid}`), { state: 'blocked', blockedAt: Date.now(), blockedBy: auth.currentUser.uid }); log('تم إغلاق الغرفة: ' + rid); alert('تم إغلاق الغرفة'); });
 
-    // Export CSV (reports or room messages)
-    btnExport.addEventListener('click', async ()=>{
-      if(!selectedReportId) return alert('اختر بلاغاً للتصدير');
-      const data = reportsCache[selectedReportId];
-      const rid = data.roomId;
-      if(!rid) return alert('لا توجد غرفة مرتبطة');
-      const snap = await get(ref(db, `rooms/${rid}/messages`));
-      const val = snap.val() || {};
-      const rows = [['messageId','from','text','ts']];
-      for(const [k,m] of Object.entries(val)) rows.push([k, m.from||'', m.text || '', m.ts||'']);
-      const csv = rows.map(r=> r.map(cell=> '"'+String(cell).replace(/"/g,'""')+'"').join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `room_${rid}_messages.csv`; a.click(); URL.revokeObjectURL(url);
-      log('تم تصدير محادثة الغرفة ' + rid);
-    });
+    btnExport.addEventListener('click', async ()=>{ if(!selectedReportId) return alert('اختر بلاغاً للتصدير'); const data = reportsCache[selectedReportId]; const rid = data.roomId; if(!rid) return alert('لا توجد غرفة مرتبطة'); const snap = await get(ref(db, `rooms/${rid}/messages`)); const val = snap.val() || {}; const rows = [['messageId','from','text','ts']]; for(const [k,m] of Object.entries(val)) rows.push([k, m.from||'', m.text || '', m.ts||'']); const csv = rows.map(r=> r.map(cell=> '"'+String(cell).replace(/"/g,'""')+'"').join(',')).join('\n'); const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `room_${rid}_messages.csv`; a.click(); URL.revokeObjectURL(url); log('تم تصدير محادثة الغرفة ' + rid); });
 
-    // Utility: escape HTML to present text safely
     function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>\"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
 
-    // Initial notes for deployers
     console.log('Moderation dashboard loaded');
     log('لوحة المشرفين جاهزة — سجّل الدخول بحساب مشرف (users/{uid}.isModerator = true)');
   </script>
